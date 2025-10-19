@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:ExcelMAUIApp"
+             x:Class="ExcelMAUIApp.MainPage"
+             NavigationPage.HasNavigationBar="False">
+             
+             <ContentPage.Resources>
+        <Style TargetType="Button" x:Key="FlatToolButtonStyle">
+            <Setter Property="BackgroundColor" Value="#e0e0e0" />
+            <Setter Property="TextColor" Value="Black" /> 
+            <Setter Property="BorderColor" Value="Transparent" />
+            <Setter Property="BorderWidth" Value="0" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="8, 2" />
+            <Setter Property="Margin" Value="0, 0, 5, 0" />
+            <Setter Property="HeightRequest" Value="18" />
+            <Setter Property="VerticalOptions" Value="Center" />
+             <Setter Property="FontFamily" Value="Roboto-Regular" /> <Setter Property="FontSize" Value="14" />
+        </Style>
+    </ContentPage.Resources>
+    <Grid> 
+        <Grid.RowDefinitions>
+            <RowDefinition Height = "Auto" />
+            <RowDefinition Height = "*" />
+            </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width = "Auto" />
+            <ColumnDefinition Width = "*" />
+        </Grid.ColumnDefinitions>
+        <StackLayout Grid.Row="0" Grid.ColumnSpan="2" Orientation="Vertical" Spacing="5">
+        <HorizontalStackLayout Spacing="5" Padding="10, 10, 10, 0" BackgroundColor="#FFFFFF">
+            <Image Source="icon_image.png" 
+                   WidthRequest="50" 
+                   HeightRequest="50" 
+                   VerticalOptions="Center" 
+                   Margin="0, 0, 10, 0" />
+            
+            <Entry x:Name="FileNameEntry"
+                   Placeholder="Введіть назву" 
+                   Text=""
+                   FontFamily="Roboto-Regular" FontSize="14" 
+                   VerticalOptions="Start" 
+                   HorizontalOptions="Start" 
+                   HeightRequest="30"
+                   WidthRequest="-1" 
+                   Margin="0" />
+                   
+            <Border BackgroundColor="#4CAF50" 
+                   Padding="5, 2" 
+                   VerticalOptions="Start"
+                   Margin="10, 0, 0, 0">
+                   <Border.StrokeShape><RoundRectangle CornerRadius="5"></RoundRectangle>  </Border.StrokeShape>
+                <Label Text=".XLSX" 
+                       TextColor="White" 
+                       FontSize="12" 
+                       FontAttributes="Bold" />
+            </Border>
+        </HorizontalStackLayout>
+        <HorizontalStackLayout Padding="5, 0, 5, 0" Spacing="5">
+            <Button Text="Зберегти" Clicked="SaveButton_Clicked" Style="{StaticResource FlatToolButtonStyle}" />
+            <Button Text="Прочитати" Clicked="ReadButton_Clicked" Style="{StaticResource FlatToolButtonStyle}"/>
+            <Button Text="Вийти" Clicked="ExitButton_Clicked" Style="{StaticResource FlatToolButtonStyle}" />
+            <Button Text="Порахувати" Clicked="CalculateButton_Clicked" Style="{StaticResource FlatToolButtonStyle}" />
+            <Button Text="Довідка" Clicked="HelpButton_Clicked" Style="{StaticResource FlatToolButtonStyle}"/>
+            <Button Text="Видалити рядок" Clicked="DeleteRowButton_Clicked" Style="{StaticResource FlatToolButtonStyle}"/>
+            <Button Text="Видалити стовпчик" Clicked="DeleteColumnButton_Clicked" Style="{StaticResource FlatToolButtonStyle}"/>
+            <Button Text="Додати рядок" Clicked="AddRowButton_Clicked" Style="{StaticResource FlatToolButtonStyle}" />
+            <Button Text="Додати стовпчик" Clicked="AddColumnButton_Clicked" Style="{StaticResource FlatToolButtonStyle}"/>
+            </HorizontalStackLayout>
+            
+            <Entry x:Name="textInput" Placeholder="Введіть текст" Grid.ColumnSpan="2" />
+      
+        </StackLayout>
+        
+        <ScrollView Grid.Row="1" Grid.ColumnSpan="2">
+            <Grid x:Name="grid">
+            </Grid>
+        </ScrollView>
+    </Grid>
+</ContentPage>
