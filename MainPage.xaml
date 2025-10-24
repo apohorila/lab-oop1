@@ -43,7 +43,7 @@
                    FontFamily="Roboto-Regular" FontSize="14" 
                    VerticalOptions="Start" 
                    HorizontalOptions="Start" 
-                   HeightRequest="30"
+                   HeightRequest="35"
                    WidthRequest="-1" 
                    Margin="0" />
                    
