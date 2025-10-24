@@ -6,7 +6,13 @@ using System.Collections.Generic;
 using Grid = Microsoft.Maui.Controls.Grid;
 using Grammars;
 using System.IO;
-using Microsoft.Maui.Storage;
+using CommunityToolkit.Maui.Storage;
+
+#if WINDOWS
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using WinRT.Interop; 
+#endif
 
 namespace ExcelMAUIApp
 {
@@ -95,7 +101,8 @@ namespace ExcelMAUIApp
 			return columnName;
 		}
 
-		private string GetCellName(int row, int col){
+		private string GetCellName(int row, int col)
+		{
 			string columnName = GetColumnName(col);
 			string rowNumber = row.ToString();
 			return columnName + rowNumber;
@@ -103,119 +110,129 @@ namespace ExcelMAUIApp
 
 		private async void Entry_Focused(object? sender, FocusEventArgs e)
 		{
-			if (sender is not Entry entry){
+			if (sender is not Entry entry)
+			{
 				return;
 			}
 			currEntry = entry;
 			var row = Grid.GetRow(entry);
 			var col = Grid.GetColumn(entry);
-			var cellName = GetCellName(row,col);
+			var cellName = GetCellName(row, col);
 
-			if(Calculator.sheet.Cells.TryGetValue(cellName, out Grammars.Cell cell)){
+			if (Calculator.sheet.Cells.TryGetValue(cellName, out Grammars.Cell cell))
+			{
 				entry.Text = cell.Value;
 				textInput.Text = cell.Expression;
-			} else
-            {
+			}
+			else
+			{
 				textInput.Text = entry.Text;
-            }
+			}
 		}
 		private void ProcessCellUpdate(Entry entry)
-        {
-            var row = Grid.GetRow(entry);
+		{
+			var row = Grid.GetRow(entry);
 			var col = Grid.GetColumn(entry);
-			var cellName = GetCellName(row,col);
+			var cellName = GetCellName(row, col);
 			var expression = entry.Text?.Trim() ?? "";
 			string originalExpression = entry.Text;
 
-			try {
-				if (!Calculator.sheet.Cells.ContainsKey(cellName)){
+			try
+			{
+				if (!Calculator.sheet.Cells.ContainsKey(cellName))
+				{
 					Calculator.sheet.Cells[cellName] = new Grammars.Cell();
 				}
-				if (expression.StartsWith("=")){
+				if (expression.StartsWith("="))
+				{
 					Calculator.sheet.Cells[cellName].Expression = expression;
 					var formula = expression.Substring(1);
 					Calculator.sheet.EditCell(cellName, formula);
 					entry.Text = Calculator.sheet.Cells[cellName].Value;
 					textInput.Text = entry.Text;
-				}else{
+				}
+				else
+				{
 					Calculator.sheet.Cells[cellName].Expression = expression;
 					Calculator.sheet.Cells[cellName].Value = expression;
 					Calculator.sheet.RefreshRecursively(cellName);
 					UpdateGridFromSheet();
 					textInput.Text = entry.Text;
 				}
-			} catch(Exception ex){
+			}
+			catch (Exception ex)
+			{
 				string errorMessage = ex.Message;
 				DisplayAlert("Помилка обчислення", $"Комірка {cellName}: {errorMessage}", "ОК");
 				entry.Text = originalExpression;
 				if (Calculator.sheet.Cells.ContainsKey(cellName))
-                {
-                    Calculator.sheet.Cells[cellName].Value = "#ERROR"; 
-                    UpdateGridFromSheet(); 
-                }
+				{
+					Calculator.sheet.Cells[cellName].Value = "#ERROR";
+					UpdateGridFromSheet();
+				}
 			}
-        }
+		}
 		private void Entry_Unfocused(object? sender, FocusEventArgs e)
 		{
 			if (sender is not Entry entry) return;
-            
-            var row = Grid.GetRow(entry);
-            var col = Grid.GetColumn(entry);
-            var cellName = GetCellName(row, col);
-            var expression = entry.Text?.Trim() ?? "";
 
-            if (!Calculator.sheet.Cells.ContainsKey(cellName))
-            {
-                Calculator.sheet.Cells[cellName] = new Grammars.Cell();
-            }
-            Calculator.sheet.Cells[cellName].Expression = expression;
-            Calculator.sheet.Cells[cellName].Value = expression;
-            textInput.Text = expression;
+			var row = Grid.GetRow(entry);
+			var col = Grid.GetColumn(entry);
+			var cellName = GetCellName(row, col);
+			var expression = entry.Text?.Trim() ?? "";
+
+			if (!Calculator.sheet.Cells.ContainsKey(cellName))
+			{
+				Calculator.sheet.Cells[cellName] = new Grammars.Cell();
+			}
+			Calculator.sheet.Cells[cellName].Expression = expression;
+			Calculator.sheet.Cells[cellName].Value = expression;
+			textInput.Text = expression;
 		}
 
 		private void TextInput_Unfocused(object sender, FocusEventArgs e)
-        {
-            if (currEntry != null)
-            {
+		{
+			if (currEntry != null)
+			{
 				currEntry.Text = textInput.Text;
 				ProcessCellUpdate(currEntry);
-            }
-        }
+			}
+		}
 
 		private async void CalculateButton_Clicked(object sender, EventArgs e)
 		{
 			if (currEntry != null)
-            {
-                currEntry.Text = textInput.Text;
-                ProcessCellUpdate(currEntry);
-            }
-            
-			try
-            {
-                var allFormulaCells = Calculator.sheet.Cells
-                    .Where(c => c.Value.Expression.StartsWith("=")) 
-                    .Select(c => c.Key)
-                    .ToList();
-                    
-                foreach (var cellName in allFormulaCells)
-                {
-                     if (Calculator.sheet.Cells.TryGetValue(cellName, out Grammars.Cell cell))
-                     {
-                         if (cell.Expression.StartsWith("="))
-                         {
-                             var formula = cell.Expression.Substring(1);
-                             Calculator.sheet.EditCell(cellName, formula);
-                         }
-                     }
-                }
+			{
+				currEntry.Text = textInput.Text;
+				ProcessCellUpdate(currEntry);
+			}
 
-                UpdateGridFromSheet();
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Помилка масового обчислення", $"Помилка: {ex.Message}", "ОК");
-                UpdateGridFromSheet(); 
-            }
+			try
+			{
+				var allFormulaCells = Calculator.sheet.Cells
+					.Where(c => c.Value.Expression.StartsWith("="))
+					.Select(c => c.Key)
+					.ToList();
+
+				foreach (var cellName in allFormulaCells)
+				{
+					if (Calculator.sheet.Cells.TryGetValue(cellName, out Grammars.Cell cell))
+					{
+						if (cell.Expression.StartsWith("="))
+						{
+							var formula = cell.Expression.Substring(1);
+							Calculator.sheet.EditCell(cellName, formula);
+						}
+					}
+				}
+
+				UpdateGridFromSheet();
+			}
+			catch (Exception ex)
+			{
+				await DisplayAlert("Помилка масового обчислення", $"Помилка: {ex.Message}", "ОК");
+				UpdateGridFromSheet();
+			}
 		}
 
 
@@ -238,9 +255,9 @@ namespace ExcelMAUIApp
 
 						}
 						else if (fullUpdate)
-							{
-								entry.Text = "";
-							}
+						{
+							entry.Text = "";
+						}
 					}
 				}
 				if (currEntry != null && Calculator.sheet.Cells.TryGetValue(GetCellName(Grid.GetRow(currEntry), Grid.GetColumn(currEntry)), out Grammars.Cell activeCell))
@@ -255,73 +272,69 @@ namespace ExcelMAUIApp
 
 		}
 
-private async void SaveButton_Clicked(object sender, EventArgs e)
-{
-    string fileName = FileNameEntry.Text?.Trim();
-    if (string.IsNullOrEmpty(fileName))
-    {
-        await DisplayAlert("Помилка", "Будь ласка, введіть назву файлу у полі 'Введіть назву'.", "ОК");
-        return;
-    }
-
-    string finalFileName = $"{fileName}.xlsx";
-    
-    string cacheDir = FileSystem.CacheDirectory;
-    string tempFilePath = Path.Combine(cacheDir, finalFileName);
-
-    try
-    {
-        var dataToSave = Calculator.sheet.Cells;
-        var lines = new List<string>();
-        
-        foreach (var kvp in dataToSave)
-        {
-            if (!string.IsNullOrEmpty(kvp.Value.Expression))
+		private async void SaveButton_Clicked(object sender, EventArgs e)
+		{
+			string fileName = FileNameEntry.Text?.Trim();
+            if (string.IsNullOrEmpty(fileName))
             {
-                lines.Add($"{kvp.Key}|{kvp.Value.Expression}");
+                await DisplayAlert("Помилка", "Будь ласка, введіть назву файлу у полі 'Введіть назву'.", "ОК");
+                return;
             }
-        }
-        string content = string.Join(Environment.NewLine, lines);
-        await File.WriteAllTextAsync(tempFilePath, content);
 
-        var fileType = new FilePickerFileType(
-            new Dictionary<DevicePlatform, IEnumerable<string>>
+            string finalFileName = $"{fileName}.txt";
+            string content = "";
+            
+            try
             {
-                { DevicePlatform.WinUI, new[] { ".xlsx" } },
-                { DevicePlatform.macOS, new[] { "xlsx" } },
-                { DevicePlatform.Android, new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" } },
-                { DevicePlatform.iOS, new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" } },
-            });
-        
-        var saveOptions = new SaveFileOptions
-        {
-            SuggestedFileName = finalFileName, 
-            PickerTitle = "Зберегти таблицю",
-            FileTypes = fileType
-        };
-        
-        var result = await FileSaver.Default.SaveAsync(tempFilePath, saveOptions);
+                var dataToSave = Calculator.sheet.Cells;
+                var lines = new List<string>();
+                
+                foreach (var kvp in dataToSave)
+                {
+                    if (!string.IsNullOrEmpty(kvp.Value.Expression))
+                    {
+                        lines.Add($"{kvp.Key}|{kvp.Value.Expression}");
+                    }
+                }
+                content = string.Join(Environment.NewLine, lines);
+                
+                #if WINDOWS
+                    var savePicker = new FileSavePicker();
+                    var window = Microsoft.Maui.Controls.Application.Current.Windows.FirstOrDefault().Handler.PlatformView as Microsoft.UI.Xaml.Window;
+                    if (window != null)
+                    {
+                        InitializeWithWindow.Initialize(savePicker, WindowNative.GetWindowHandle(window));
+                    }
 
-        if (string.IsNullOrEmpty(result))
-        {
-             await DisplayAlert("Збереження", "Збереження скасовано.", "ОК");
-        }
-        else
-        {
-            await DisplayAlert("Збереження", $"Файл '{finalFileName}' успішно збережено за вибраним шляхом.", "ОК");
-        }
-        
-        File.Delete(tempFilePath);
-    }
-    catch (Exception ex)
-    {
-        await DisplayAlert("Помилка збереження", $"Не вдалося зберегти файл: {ex.Message}", "ОК");
-        if (File.Exists(tempFilePath))
-        {
-            File.Delete(tempFilePath);
-        }
-    }
-}
+                    savePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+                    savePicker.FileTypeChoices.Add("Excel File", new List<string>() { ".txt" });
+                    savePicker.SuggestedFileName = finalFileName;
+                    
+                    StorageFile file = await savePicker.PickSaveFileAsync();
+                    
+                    if (file != null)
+                    {
+                        await FileIO.WriteTextAsync(file, content);
+                        await DisplayAlert("Збереження", $"Файл '{file.Name}' успішно збережено у вибраній папці Windows.", "ОК");
+                    }
+                    else
+                    {
+                        await DisplayAlert("Збереження", "Збереження скасовано користувачем.", "ОК");
+                    }
+                
+                #else
+                    string appDataDir = FileSystem.AppDataDirectory; 
+                    string fullPath = Path.Combine(appDataDir, finalFileName);
+
+                    await File.WriteAllTextAsync(fullPath, content);
+                    await DisplayAlert("Збереження", $"Файл '{finalFileName}' успішно збережено у внутрішньому сховищі.", "ОК");
+                #endif
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Помилка збереження", $"Не вдалося зберегти файл: {ex.Message}", "ОК");
+            }
+		}
 
 		private async void ReadButton_Clicked(object sender, EventArgs e)
 		{
@@ -346,7 +359,7 @@ private async void SaveButton_Clicked(object sender, EventArgs e)
 
 				if (result == null)
 				{
-					return; 
+					return;
 				}
 
 				string fullPath = result.FullPath;

@@ -67,8 +67,9 @@
 	<ItemGroup>
 		<PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
 		<PackageReference Include="Antlr4BuildTasks" Version="12.10" PrivateAssets="all" IncludeAssets="build" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.121"/>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.90"/>
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.121" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="12.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>
